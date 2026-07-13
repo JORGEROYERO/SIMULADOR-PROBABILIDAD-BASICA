@@ -54,22 +54,33 @@
   }
   .niveles {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-top: 8px;
   }
   .nivel-btn {
     flex: 1;
-    padding: 14px;
+    min-width: 90px;
+    padding: 12px 6px;
     border: 2px solid #1e3c72;
     background: #fff;
     color: #1e3c72;
     border-radius: 10px;
-    font-size: 15px;
+    font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
+    line-height: 1.3;
   }
   .nivel-btn.activo {
     background: #1e3c72;
+    color: #fff;
+  }
+  .nivel-btn.especial {
+    border-color: #b8860b;
+    color: #8a6500;
+  }
+  .nivel-btn.especial.activo {
+    background: #b8860b;
     color: #fff;
   }
   .btn-iniciar {
@@ -255,6 +266,23 @@
     margin: 6px 0;
     color: #1e3c72;
   }
+  .modo-especial .pregunta-texto {
+    font-size: 21px;
+    line-height: 1.5;
+  }
+  .modo-especial .opcion {
+    font-size: 18px;
+    padding: 16px 18px;
+  }
+  .modo-especial .caja-ayuda {
+    font-size: 16px;
+  }
+  .modo-especial .caja-ayuda .ayuda-formula {
+    font-size: 17px;
+  }
+  .modo-especial .retroalimentacion {
+    font-size: 16px;
+  }
 </style>
 </head>
 <body>
@@ -282,6 +310,7 @@
     <div class="niveles">
       <button type="button" class="nivel-btn" id="btn-bajo" onclick="elegirNivel('bajo')">Bajo</button>
       <button type="button" class="nivel-btn" id="btn-intermedio" onclick="elegirNivel('intermedio')">Intermedio</button>
+      <button type="button" class="nivel-btn especial" id="btn-especial" onclick="elegirNivel('especial')">Especial (NEE)</button>
     </div>
 
     <button class="btn-iniciar" id="btn-iniciar" onclick="iniciarSimulador()" disabled>Comenzar</button>
@@ -440,6 +469,69 @@ const preguntasIntermedio = [
     ayuda: { tipo: "Combinación", formula: "nCr = n! / (r! (n − r)!)", razon: "Es combinación porque la 'C' de 6C3 indica que se eligen 3 elementos de 6 sin importar el orden." } }
 ];
 
+const preguntasEspecial = [
+  { p: "Al lanzar una moneda, ¿cuántos resultados posibles hay: cara o sello?", o: ["1", "2", "3"], r: 1,
+    fb_ok: "Correcto. Una moneda tiene 2 resultados posibles.",
+    fb_mal: "La moneda tiene 2 lados: cara y sello. Por eso hay 2 resultados posibles.",
+    ayuda: { tipo: "Conteo", formula: "Cuenta las opciones", razon: "Piensa en los lados que tiene una moneda cuando la lanzas." } },
+  { p: "¿Cuántas caras tiene un dado?", o: ["4", "5", "6"], r: 2,
+    fb_ok: "Correcto. Un dado tiene 6 caras.",
+    fb_mal: "Un dado tiene 6 caras, numeradas del 1 al 6.",
+    ayuda: { tipo: "Conteo", formula: "Cuenta las caras", razon: "Cuenta cuántas caras diferentes tiene un dado." } },
+  { p: "¿Cuál es la probabilidad de sacar cara al lanzar una moneda?", o: ["1/2", "1", "2"], r: 0,
+    fb_ok: "Correcto. Es 1 de 2 resultados posibles, es decir 1/2.",
+    fb_mal: "Hay 2 resultados posibles (cara o sello) y 1 de ellos es cara, entonces es 1/2.",
+    ayuda: { tipo: "Probabilidad", formula: "P = favorables / posibles", razon: "Piensa en cuántos resultados puede dar la moneda, y cuántos de esos son cara. Luego divide favorable entre posible." } },
+  { p: "Tienes 2 camisetas y 2 gorras. ¿Cuántas combinaciones diferentes puedes armar?", o: ["2", "4", "6"], r: 1,
+    fb_ok: "Correcto. 2 × 2 = 4 combinaciones.",
+    fb_mal: "Se multiplican las camisetas por las gorras: 2 × 2 = 4.",
+    ayuda: { tipo: "Conteo", formula: "Total = opción 1 × opción 2", razon: "Multiplica el número de camisetas por el número de gorras." } },
+  { p: "¿Cuánto es 2! (factorial de 2)?", o: ["1", "2", "4"], r: 1,
+    fb_ok: "Correcto. 2! = 2 × 1 = 2.",
+    fb_mal: "El factorial de 2 es 2 × 1 = 2.",
+    ayuda: { tipo: "Factorial", formula: "n! = n × (n − 1) × ... × 1", razon: "El factorial de 2 se calcula así: 2 × 1. Haz la multiplicación." } },
+  { p: "¿Cuánto es 3! (factorial de 3)?", o: ["3", "6", "9"], r: 1,
+    fb_ok: "Correcto. 3! = 3 × 2 × 1 = 6.",
+    fb_mal: "El factorial de 3 es 3 × 2 × 1 = 6.",
+    ayuda: { tipo: "Factorial", formula: "n! = n × (n − 1) × ... × 1", razon: "El factorial de 3 se calcula así: 3 × 2 × 1. Haz la multiplicación." } },
+  { p: "¿De cuántas formas se pueden ordenar 2 fichas de distinto color en una fila?", o: ["1", "2", "3"], r: 1,
+    fb_ok: "Correcto. Se usa el factorial de 2: 2! = 2.",
+    fb_mal: "Se ordenan las 2 fichas usando el factorial de 2: 2! = 2 × 1 = 2.",
+    ayuda: { tipo: "Permutación", formula: "P = n!", razon: "Como se ordenan las 2 fichas, se usa el factorial de 2: multiplica 2 × 1." } },
+  { p: "Un primer puesto y un segundo puesto son premios distintos. Si compiten 2 amigos, ¿de cuántas formas se pueden repartir esos puestos?", o: ["1", "2", "4"], r: 1,
+    fb_ok: "Correcto. Como los puestos son distintos, el orden importa: 2 formas.",
+    fb_mal: "Como los puestos son distintos (primero y segundo), el orden importa. Con 2 amigos hay 2 formas de repartirlos.",
+    ayuda: { tipo: "Permutación", formula: "nPr = n! / (n − r)!", razon: "Los puestos son distintos (primero y segundo), así que el orden importa. Piensa de cuántas maneras puedes acomodar a los 2 amigos en esos 2 puestos." } },
+  { p: "De un grupo de 2 amigos se elige 1 para representar al curso, sin que haya un puesto especial. ¿De cuántas formas se puede elegir?", o: ["1", "2", "3"], r: 1,
+    fb_ok: "Correcto. Hay 2 formas, una por cada amigo.",
+    fb_mal: "Como solo se elige 1 persona sin puesto especial, hay tantas formas como amigos: 2.",
+    ayuda: { tipo: "Combinación", formula: "nCr = n! / (r! (n − r)!)", razon: "No hay puesto especial, solo se elige a uno de los 2 amigos. Piensa cuántos amigos distintos podrían ser el elegido." } },
+  { p: "¿Cuál es la probabilidad de sacar el número 1 al lanzar un dado?", o: ["1/6", "1/2", "1"], r: 0,
+    fb_ok: "Correcto. El 1 aparece en 1 sola cara de las 6: 1/6.",
+    fb_mal: "El número 1 aparece en 1 sola cara de las 6 que tiene el dado, entonces es 1/6.",
+    ayuda: { tipo: "Probabilidad", formula: "P = favorables / posibles", razon: "Piensa en cuántas veces aparece el número 1 en el dado, y cuántas caras tiene el dado en total. Luego divide favorable entre posible." } },
+  { p: "Una heladería tiene 2 sabores y 2 tamaños de vaso. ¿Cuántas combinaciones de helado hay?", o: ["2", "4", "6"], r: 1,
+    fb_ok: "Correcto. 2 × 2 = 4 combinaciones.",
+    fb_mal: "Se multiplican los sabores por los tamaños: 2 × 2 = 4.",
+    ayuda: { tipo: "Conteo", formula: "Total = opción 1 × opción 2", razon: "Multiplica el número de sabores por el número de tamaños." } },
+  { p: "Una bolsa tiene 2 canicas rojas y 2 canicas azules. ¿Cuál es la probabilidad de sacar una roja?", o: ["1/2", "1/4", "2"], r: 0,
+    fb_ok: "Correcto. Hay 2 rojas de un total de 4 canicas: 2/4, que es lo mismo que 1/2.",
+    fb_mal: "Hay 2 canicas rojas de un total de 4 canicas en la bolsa (2 rojas + 2 azules): 2/4, o sea 1/2.",
+    ayuda: { tipo: "Probabilidad", formula: "P = favorables / posibles", razon: "Cuenta cuántas canicas rojas hay y cuántas canicas hay en total en la bolsa (suma rojas más azules). Luego divide favorable entre posible." } },
+  { p: "Si todas las fichas de una bolsa son verdes, ¿cuál es la probabilidad de sacar una ficha verde?", o: ["0", "1/2", "1"], r: 2,
+    fb_ok: "Correcto. Si todas son verdes, siempre vas a sacar una verde: la probabilidad es 1.",
+    fb_mal: "Si todas las fichas son verdes, es seguro que vas a sacar una verde. Eso es probabilidad 1.",
+    ayuda: { tipo: "Probabilidad", formula: "P = favorables / posibles", razon: "Piensa: si todas las fichas de la bolsa son del color que buscas, ¿podrías fallar alguna vez al sacar una? A eso se le llama evento seguro." } },
+  { p: "Si en una bolsa no hay ninguna ficha azul, ¿cuál es la probabilidad de sacar una ficha azul?", o: ["0", "1/2", "1"], r: 0,
+    fb_ok: "Correcto. Como no hay ninguna ficha azul, es imposible sacarla: probabilidad 0.",
+    fb_mal: "Si no hay ninguna ficha azul en la bolsa, es imposible sacarla. Eso es probabilidad 0.",
+    ayuda: { tipo: "Probabilidad", formula: "P = favorables / posibles", razon: "Piensa: si no hay ninguna ficha de ese color en la bolsa, ¿alguna vez la podrías sacar? A eso se le llama evento imposible." } },
+  { p: "Puedes ir al colegio en bus o a pie, y puedes llevar mochila azul o roja. ¿Cuántas combinaciones hay entre transporte y mochila?", o: ["2", "4", "6"], r: 1,
+    fb_ok: "Correcto. 2 × 2 = 4 combinaciones.",
+    fb_mal: "Se multiplican las formas de ir (2) por los colores de mochila (2): 2 × 2 = 4.",
+    ayuda: { tipo: "Conteo", formula: "Total = opción 1 × opción 2", razon: "Multiplica las formas de ir al colegio por los colores de mochila disponibles." } }
+];
+
 let preguntas = [];
 let nivelElegido = "";
 let indiceActual = 0;
@@ -453,6 +545,7 @@ function elegirNivel(nivel) {
   nivelElegido = nivel;
   document.getElementById('btn-bajo').classList.toggle('activo', nivel === 'bajo');
   document.getElementById('btn-intermedio').classList.toggle('activo', nivel === 'intermedio');
+  document.getElementById('btn-especial').classList.toggle('activo', nivel === 'especial');
   validarInicio();
 }
 
@@ -477,11 +570,18 @@ function barajar(array) {
 function iniciarSimulador() {
   nombreEstudiante = document.getElementById('nombre').value.trim();
   cursoEstudiante = document.getElementById('curso').value;
-  preguntas = nivelElegido === 'bajo' ? barajar(preguntasBajo) : barajar(preguntasIntermedio);
+  if (nivelElegido === 'bajo') {
+    preguntas = barajar(preguntasBajo);
+  } else if (nivelElegido === 'intermedio') {
+    preguntas = barajar(preguntasIntermedio);
+  } else {
+    preguntas = barajar(preguntasEspecial);
+  }
   indiceActual = 0;
   aciertos = 0;
   respondida = false;
   respuestasDetalle = [];
+  document.getElementById('pantalla-quiz').classList.toggle('modo-especial', nivelElegido === 'especial');
   document.getElementById('pantalla-inicio').classList.remove('activa');
   document.getElementById('pantalla-quiz').classList.add('activa');
   mostrarPregunta();
@@ -499,12 +599,17 @@ function mostrarPregunta() {
   const cajaAyuda = document.getElementById('caja-ayuda');
   cajaAyuda.style.display = 'none';
   if (pregunta.ayuda) {
-    btnAyuda.style.display = 'inline-block';
-    btnAyuda.textContent = '💡 Ver ayuda con la fórmula';
     cajaAyuda.innerHTML =
       `<div class="ayuda-tipo">Es una ${pregunta.ayuda.tipo}</div>` +
       `<div class="ayuda-formula">${pregunta.ayuda.formula}</div>` +
       `<div>${pregunta.ayuda.razon}</div>`;
+    if (nivelElegido === 'especial') {
+      btnAyuda.style.display = 'none';
+      cajaAyuda.style.display = 'block';
+    } else {
+      btnAyuda.style.display = 'inline-block';
+      btnAyuda.textContent = '💡 Ver ayuda con la fórmula';
+    }
   } else {
     btnAyuda.style.display = 'none';
   }
@@ -603,7 +708,7 @@ function enviarResultado(puntaje) {
     asignatura: 'Simulador Probabilidad y Conteo',
     nombre: nombreEstudiante,
     curso: cursoEstudiante,
-    nivel: nivelElegido === 'bajo' ? 'Bajo' : 'Intermedio',
+    nivel: nivelElegido === 'bajo' ? 'Bajo' : (nivelElegido === 'intermedio' ? 'Intermedio' : 'Especial (NEE)'),
     correctas: aciertos,
     incorrectas: incorrectas,
     porcentaje: porcentaje,
